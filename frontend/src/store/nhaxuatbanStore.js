@@ -58,8 +58,9 @@ export const useNhaXuatBanStore = defineStore('nhaxuatban', () => {
     error.value = null
     try {
       const response = await nhaxuatbanService.create(data)
-      nhaxuatbans.value.unshift(response.data.data)
-      return response.data
+      const newNXB = response.data.data || response.data
+      nhaxuatbans.value.unshift(newNXB)
+      return newNXB
     } catch (err) {
       error.value = err.response?.data?.message || 'Không thể tạo nhà xuất bản mới'
       throw err
@@ -73,14 +74,15 @@ export const useNhaXuatBanStore = defineStore('nhaxuatban', () => {
     error.value = null
     try {
       const response = await nhaxuatbanService.update(id, data)
+      const updatedNXB = response.data.data || response.data
       const index = nhaxuatbans.value.findIndex(nxb => nxb._id === id)
       if (index !== -1) {
-        nhaxuatbans.value[index] = response.data.data
+        nhaxuatbans.value[index] = updatedNXB
       }
       if (currentNXB.value?._id === id) {
-        currentNXB.value = response.data.data
+        currentNXB.value = updatedNXB
       }
-      return response.data
+      return updatedNXB
     } catch (err) {
       error.value = err.response?.data?.message || 'Không thể cập nhật nhà xuất bản'
       throw err
@@ -103,12 +105,20 @@ export const useNhaXuatBanStore = defineStore('nhaxuatban', () => {
     }
   }
 
-  async function searchNXB(keyword) {
+  async function searchNXB(keyword, params = {}) {
     loading.value = true
     error.value = null
     try {
-      const response = await nhaxuatbanService.search(keyword)
-      nhaxuatbans.value = response.data
+      const response = await nhaxuatbanService.search(keyword, { page: params.page || 1, limit: params.limit || 10 })
+      nhaxuatbans.value = response.data.data || []
+      
+      pagination.value = {
+        page: parseInt(response.data.currentPage) || 1,
+        limit: parseInt(params.limit) || 10,
+        total: response.data.total || 0,
+        totalPages: response.data.totalPages || 0
+      }
+      
       return response.data
     } catch (err) {
       error.value = err.response?.data?.message || 'Không thể tìm kiếm nhà xuất bản'

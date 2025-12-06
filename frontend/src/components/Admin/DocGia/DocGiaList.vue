@@ -42,25 +42,34 @@
           <table class="table table-hover">
             <thead>
               <tr>
-                <th>Mã độc giả</th>
-                <th>Họ và tên</th>
+                <th>Họ lót</th>
+                <th>Tên</th>
+                <th>Email</th>
+                <th>Điện thoại</th>
                 <th>Ngày sinh</th>
                 <th>Giới tính</th>
-                <th>Điện thoại</th>
-                <th>Email</th>
                 <th>Địa chỉ</th>
+                <th>Trạng thái</th>
                 <th>Thao tác</th>
               </tr>
             </thead>
             <tbody>
               <tr v-for="docgia in docgias" :key="docgia._id">
-                <td>{{ docgia.MaDocGia }}</td>
-                <td>{{ docgia.HoTenDem }} {{ docgia.Ten }}</td>
-                <td>{{ formatDate(docgia.NgaySinh) }}</td>
-                <td>{{ docgia.Phai }}</td>
-                <td>{{ docgia.DienThoai }}</td>
+                <td><strong>{{ docgia.HoLot }}</strong></td>
+                <td><strong>{{ docgia.Ten }}</strong></td>
                 <td>{{ docgia.Email }}</td>
+                <td>{{ docgia.DienThoai }}</td>
+                <td>{{ formatDate(docgia.NgaySinh) }}</td>
+                <td>{{ docgia.Phai || '-' }}</td>
                 <td class="text-truncate" style="max-width: 200px;">{{ docgia.DiaChi }}</td>
+                <td>
+                  <span 
+                    class="badge"
+                    :class="docgia.TrangThai === 'Hoạt động' ? 'bg-success' : 'bg-danger'"
+                  >
+                    {{ docgia.TrangThai }}
+                  </span>
+                </td>
                 <td>
                   <button 
                     class="btn btn-sm btn-info me-1" 
@@ -149,9 +158,7 @@ const handleSearch = () => {
 }
 
 const handleDelete = (docgia) => {
-  if (confirm(`Bạn có chắc chắn muốn xóa độc giả "${docgia.HoTenDem} ${docgia.Ten}"?`)) {
-    emit('delete', docgia._id)
-  }
+  emit('delete', docgia._id)
 }
 
 const formatDate = (date) => {

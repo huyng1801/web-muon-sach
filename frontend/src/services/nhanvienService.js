@@ -18,7 +18,7 @@ export const nhanvienService = {
 
   // Tạo nhân viên mới (Admin)
   create(data) {
-    return api.post('/nhanvien', data)
+    return api.post('/nhanvien/register', data)
   },
 
   // Cập nhật thông tin nhân viên (Admin)
@@ -48,7 +48,7 @@ export const nhanvienService = {
 
   // Tìm kiếm nhân viên (Admin)
   search(keyword) {
-    return api.get('/nhanvien/search', { params: { keyword } })
+    return api.get('/nhanvien', { params: { search: keyword } })
   }
 }
 

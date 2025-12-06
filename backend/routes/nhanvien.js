@@ -8,6 +8,13 @@ const { validateNhanVien, validate } = require('../middleware/validation');
 // Đăng nhập nhân viên
 router.post('/login', nhanvienController.login);
 
+// ========== ROUTES CHO NHÂN VIÊN ==========
+// Profile (nhân viên hiện tại)
+router.post('/logout', protect, nhanvienController.logout);
+router.get('/profile', protect, nhanvienController.getProfile);
+router.put('/profile', protect, nhanvienController.updateProfile);
+router.put('/change-password', protect, nhanvienController.changePassword);
+
 // ========== ROUTES CHO ADMIN ==========
 // Quản lý nhân viên (chỉ Admin)
 router.post('/register', protect, isAdmin, validateNhanVien, validate, nhanvienController.register);

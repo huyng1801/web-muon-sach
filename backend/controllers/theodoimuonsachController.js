@@ -64,6 +64,7 @@ exports.getTheoDoiMuonSachById = async (req, res) => {
   try {
     const muonSach = await TheoDoiMuonSach.findById(req.params.id)
       .populate('MaDocGia', 'HoLot Ten Email DienThoai DiaChi')
+      .populate('MaNhanVien', 'HoTenNV ChucVu')
       .populate({
         path: 'MaSach',
         populate: {
@@ -176,20 +177,30 @@ exports.createMuonSach = async (req, res) => {
   }
 };
 
-// @desc    Lấy lịch sử mượn sách của bản thân (DocGia)
+// @desc    Lấy lịch sử mượn sách của bản thân (DocGia) hoặc của 1 DocGia cụ thể (Staff)
 // @route   GET /api/theodoimuonsach/user/history
-// @access  Private (DocGia)
+// @access  Private (DocGia hoặc Staff)
 exports.getUserHistory = async (req, res) => {
   try {
     const { page = 1, limit = 10 } = req.query;
 
-    const muonSachList = await TheoDoiMuonSach.find({ MaDocGia: req.userId })
+    // Nếu là DocGia, lấy lịch sử của chính mình, nếu là Staff, lấy lịch sử của tất cả hoặc của 1 user cụ thể
+    const docgiaId = req.userType === 'DocGia' ? req.userId : (req.query.MaDocGia || null);
+
+    if (!docgiaId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Vui lòng cung cấp ID độc giả'
+      });
+    }
+
+    const muonSachList = await TheoDoiMuonSach.find({ MaDocGia: docgiaId })
       .populate('MaSach', 'TenSach ISBN NguonGoc_TacGia DonGia')
       .limit(limit * 1)
       .skip((page - 1) * limit)
       .sort({ NgayMuon: -1 });
 
-    const count = await TheoDoiMuonSach.countDocuments({ MaDocGia: req.userId });
+    const count = await TheoDoiMuonSach.countDocuments({ MaDocGia: docgiaId });
 
     res.status(200).json({
       success: true,
@@ -245,11 +256,13 @@ exports.approveMuonSach = async (req, res) => {
     // Cập nhật trạng thái
     muonSach.TrangThai = 'Đang mượn';
     muonSach.NgayMuon = new Date();
+    muonSach.MaNhanVien = req.userId; // Lưu nhân viên duyệt
     await muonSach.save();
 
     const muonSachPopulated = await TheoDoiMuonSach.findById(muonSach._id)
       .populate('MaDocGia', 'HoLot Ten Email DienThoai')
-      .populate('MaSach', 'TenSach ISBN NguonGoc_TacGia');
+      .populate('MaSach', 'TenSach ISBN NguonGoc_TacGia')
+      .populate('MaNhanVien', 'HoTenNV ChucVu');
 
     res.status(200).json({
       success: true,
@@ -317,6 +330,8 @@ exports.rejectMuonSach = async (req, res) => {
 // @access  Private (Staff)
 exports.returnSach = async (req, res) => {
   try {
+    const { NgayTra, TinhTrangSach, TienPhat, GhiChu } = req.body;
+    
     const muonSach = await TheoDoiMuonSach.findById(req.params.id);
 
     if (!muonSach) {
@@ -340,23 +355,35 @@ exports.returnSach = async (req, res) => {
       await sach.save();
     }
 
+    // Cập nhật thông tin trả sách
+    muonSach.NgayTra = NgayTra ? new Date(NgayTra) : new Date();
+    muonSach.TinhTrangSach = TinhTrangSach || 'good';
+    muonSach.MaNhanVien = req.userId; // Lưu nhân viên xử lý
+    
+    // Cập nhật hoặc thêm ghi chú
+    if (GhiChu) {
+      muonSach.GhiChu = muonSach.GhiChu ? `${muonSach.GhiChu}\n[Trả sách]: ${GhiChu}` : GhiChu;
+    }
+    
     // Tính tiền phạt nếu quá hạn
-    const ngayTra = new Date();
+    const ngayTra = new Date(muonSach.NgayTra);
     const ngayHenTra = new Date(muonSach.NgayHenTra);
     
     if (ngayTra > ngayHenTra) {
       const soNgayTre = Math.ceil((ngayTra - ngayHenTra) / (1000 * 60 * 60 * 24));
-      const tienPhatMoiNgay = 5000; // 5000đ/ngày
-      muonSach.TienPhat = soNgayTre * tienPhatMoiNgay;
+      const tienPhatMoiNgay = TienPhat ? Math.floor(TienPhat / soNgayTre) : 5000; // Mặc định 5000đ/ngày
+      muonSach.TienPhat = TienPhat || (soNgayTre * tienPhatMoiNgay);
+    } else {
+      muonSach.TienPhat = 0;
     }
 
     muonSach.TrangThai = 'Đã trả';
-    muonSach.NgayTra = ngayTra;
     await muonSach.save();
 
     const muonSachPopulated = await TheoDoiMuonSach.findById(muonSach._id)
       .populate('MaDocGia', 'HoLot Ten Email DienThoai')
-      .populate('MaSach', 'TenSach ISBN NguonGoc_TacGia');
+      .populate('MaSach', 'TenSach ISBN NguonGoc_TacGia')
+      .populate('MaNhanVien', 'HoTenNV');
 
     res.status(200).json({
       success: true,

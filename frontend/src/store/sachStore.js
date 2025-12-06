@@ -108,7 +108,22 @@ export const useSachStore = defineStore('sach', () => {
     error.value = null
     try {
       const response = await sachService.search(keyword)
-      sachs.value = response.data
+      // Search API trả về mảng hoặc object với dữ liệu
+      sachs.value = response.data.data || response.data || []
+      
+      // Nếu response có pagination, cập nhật nó
+      if (response.data.pagination) {
+        pagination.value = response.data.pagination
+      } else {
+        // Nếu không có pagination từ search, reset về mặc định
+        pagination.value = {
+          page: 1,
+          limit: 10,
+          total: (response.data.data || response.data || []).length,
+          totalPages: 1
+        }
+      }
+
       return response.data
     } catch (err) {
       error.value = err.response?.data?.message || 'Không thể tìm kiếm sách'

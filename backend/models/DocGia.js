@@ -53,7 +53,14 @@ const docGiaSchema = new mongoose.Schema({
     default: Date.now
   }
 }, {
-  timestamps: true
+  timestamps: true,
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true }
+});
+
+// Virtual field để ghép họ lót + tên
+docGiaSchema.virtual('HoTen').get(function() {
+  return `${this.HoLot} ${this.Ten}`.trim();
 });
 
 // Index để tìm kiếm nhanh

@@ -17,7 +17,7 @@
           </router-link>
         </li>
         <li>
-          <router-link to="/admin/muonsach" class="sidebar-link">
+          <router-link to="/admin/lich-su-muon" class="sidebar-link">
             <i class="bi bi-journal-check"></i>
             <span v-if="!collapsed">Quản lý mượn sách</span>
           </router-link>
@@ -87,34 +87,41 @@ const toggleSidebar = () => {
 
 <style scoped>
 .sidebar {
-  min-height: 100vh;
-  width: 250px;
-  position: fixed;
-  top: 56px;
-  left: 0;
-  padding: 20px 0;
+  background: linear-gradient(180deg, #2c3e50 0%, #34495e 100%);
+  overflow-y: auto;
+  padding: 0;
   transition: width 0.3s ease;
-  z-index: 1000;
-}
-
-.sidebar.collapsed {
-  width: 80px;
 }
 
 .sidebar-header {
   display: flex;
   align-items: center;
-  padding: 0 20px;
-  margin-bottom: 20px;
+  padding: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 0;
 }
 
 .sidebar-header button {
-  padding: 5px;
-  text-decoration: none;
+  padding: 8px 12px;
+  border-radius: 4px;
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.sidebar-header button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.sidebar-header span {
+  font-weight: 600;
+  letter-spacing: 0.5px;
 }
 
 .sidebar-menu {
-  padding: 0;
+  padding: 15px 0;
   margin: 0;
 }
 
@@ -126,31 +133,62 @@ const toggleSidebar = () => {
   display: flex;
   align-items: center;
   padding: 12px 20px;
-  color: #fff;
+  color: rgba(255, 255, 255, 0.7);
   text-decoration: none;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
+  border-left: 3px solid transparent;
+  margin: 2px 0;
 }
 
 .sidebar-link:hover {
   background-color: rgba(255, 255, 255, 0.1);
   color: #fff;
+  border-left-color: rgba(255, 255, 255, 0.3);
 }
 
 .sidebar-link.router-link-active {
-  background-color: rgba(255, 255, 255, 0.2);
-  border-left: 4px solid #fff;
+  background-color: rgba(52, 149, 219, 0.3);
+  color: #3495db;
+  border-left-color: #3495db;
+  font-weight: 600;
 }
 
 .sidebar-link i {
-  font-size: 1.2rem;
-  min-width: 30px;
+  font-size: 1.1rem;
+  min-width: 28px;
+  text-align: center;
+  transition: all 0.2s ease;
 }
 
 .sidebar-link span {
-  margin-left: 10px;
+  margin-left: 12px;
+  flex: 1;
 }
 
-.collapsed .sidebar-link span {
+.sidebar.collapsed .sidebar-link span {
   display: none;
+}
+
+.sidebar.collapsed .sidebar-link {
+  justify-content: center;
+  padding: 12px;
+}
+
+/* Scrollbar styling */
+.sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.4);
 }
 </style>

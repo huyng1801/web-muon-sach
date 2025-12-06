@@ -213,6 +213,20 @@ exports.updateSach = async (req, res) => {
 // @access  Private (Staff)
 exports.deleteSach = async (req, res) => {
   try {
+    // Kiểm tra xem sách đó có đang được mượn không
+    const TheoDoiMuonSach = require('../models/TheoDoiMuonSach');
+    const borrowCount = await TheoDoiMuonSach.countDocuments({ 
+      MaSach: req.params.id,
+      TrangThai: { $in: ['Đang mượn', 'Quá hạn'] }
+    });
+    
+    if (borrowCount > 0) {
+      return res.status(400).json({
+        success: false,
+        message: `Không thể xóa sách này vì nó đang được ${borrowCount} người mượn. Vui lòng đợi họ trả sách.`
+      });
+    }
+
     const sach = await Sach.findByIdAndDelete(req.params.id);
 
     if (!sach) {

@@ -5,14 +5,19 @@
 </template>
 
 <script setup>
-import { onMounted } from 'vue'
+import { onMounted, onUnmounted } from 'vue'
 import { useAuthStore } from '@/store/authStore'
 
 const authStore = useAuthStore()
 
 onMounted(() => {
-  // Khôi phục trạng thái đăng nhập từ localStorage
+  // Khôi phục trạng thái đăng nhập từ cookie
   authStore.checkAuth()
+})
+
+onUnmounted(() => {
+  // Cleanup auto-refresh khi app unmount
+  authStore.stopAutoRefresh()
 })
 </script>
 

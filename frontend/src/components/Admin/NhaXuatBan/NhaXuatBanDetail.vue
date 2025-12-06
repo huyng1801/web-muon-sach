@@ -24,10 +24,10 @@
 
             <table class="table table-borderless">
               <tbody>
-                <tr>
+                <!-- <tr>
                   <th width="150">ID:</th>
                   <td><code>{{ nxb._id }}</code></td>
-                </tr>
+                </tr> -->
                 <tr v-if="nxb.DiaChi">
                   <th>Địa chỉ:</th>
                   <td>

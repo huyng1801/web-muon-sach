@@ -27,8 +27,8 @@ export const nhaxuatbanService = {
   },
 
   // Tìm kiếm nhà xuất bản
-  search(keyword) {
-    return api.get('/nhaxuatban/search', { params: { keyword } })
+  search(keyword, params = {}) {
+    return api.get('/nhaxuatban', { params: { search: keyword, ...params } })
   },
 
   // Lấy danh sách sách của nhà xuất bản

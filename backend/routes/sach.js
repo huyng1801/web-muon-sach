@@ -6,6 +6,7 @@ const { validateSach, validate } = require('../middleware/validation');
 
 // ========== ROUTES CÔNG KHAI ==========
 // Xem danh sách và chi tiết sách
+router.get('/search', sachController.getAllSach); // Search must be before /:id
 router.get('/', sachController.getAllSach);
 router.get('/:id', sachController.getSachById);
 

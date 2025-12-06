@@ -17,24 +17,14 @@
             </div>
           </div>
           <div class="col-md-3 mb-3">
-            <select class="form-select" v-model="filterCategory" @change="handleFilter">
-              <option value="">Tất cả thể loại</option>
-              <option value="Văn học">Văn học</option>
-              <option value="Khoa học">Khoa học</option>
-              <option value="Công nghệ">Công nghệ</option>
-              <option value="Lịch sử">Lịch sử</option>
-              <option value="Kinh tế">Kinh tế</option>
-              <option value="Nghệ thuật">Nghệ thuật</option>
+            <select class="form-select" v-model="filterPublisher" @change="handleFilter">
+              <option value="">Tất cả nhà xuất bản</option>
+              <option v-for="nxb in publishers" :key="nxb._id" :value="nxb._id">
+                {{ nxb.TenNXB }}
+              </option>
             </select>
           </div>
-          <div class="col-md-3 mb-3">
-            <select class="form-select" v-model="sortBy" @change="handleSort">
-              <option value="newest">Mới nhất</option>
-              <option value="oldest">Cũ nhất</option>
-              <option value="name">Tên A-Z</option>
-              <option value="popular">Phổ biến</option>
-            </select>
-          </div>
+          
         </div>
       </div>
     </div>
@@ -60,17 +50,26 @@
               <h6 class="card-title text-truncate" :title="sach.TenSach">
                 {{ sach.TenSach }}
               </h6>
-              <p class="card-text text-muted small mb-2">
+              <p class="card-text text-muted small mb-1">
                 <i class="bi bi-person"></i>
-                {{ sach.TacGia || 'Không rõ' }}
+                {{ sach.NguonGoc_TacGia || 'Không rõ tác giả' }}
+              </p>
+              <p class="card-text text-muted small mb-1">
+                <i class="bi bi-buildings"></i>
+                <span v-if="sach.MaNXB">{{ typeof sach.MaNXB === 'string' ? 'Không rõ' : (sach.MaNXB.TenNXB || 'Không rõ') }}</span>
+                <span v-else>Không rõ</span>
+              </p>
+              <p class="card-text text-muted small mb-2">
+                <i class="bi bi-calendar"></i>
+                {{ sach.NamXuatBan || 'N/A' }}
               </p>
               <div class="d-flex justify-content-between align-items-center">
-                <span class="badge bg-info">{{ sach.TheLoai }}</span>
+                <span class="badge bg-warning text-dark">{{ formatCurrency(sach.DonGia) }}</span>
                 <span 
                   class="badge" 
                   :class="sach.SoQuyen > 0 ? 'bg-success' : 'bg-danger'"
                 >
-                  {{ sach.SoQuyen > 0 ? 'Còn sách' : 'Hết' }}
+                  {{ sach.SoQuyen > 0 ? `Còn ${sach.SoQuyen}` : 'Hết' }}
                 </span>
               </div>
             </div>
@@ -135,21 +134,32 @@ const props = defineProps({
   pagination: {
     type: Object,
     default: () => ({ page: 1, limit: 12, total: 0, totalPages: 0 })
+  },
+  publishers: {
+    type: Array,
+    default: () => []
   }
 })
 
 const emit = defineEmits(['view', 'borrow', 'search', 'filter', 'sort', 'page-change'])
 
 const searchKeyword = ref('')
-const filterCategory = ref('')
+const filterPublisher = ref('')
 const sortBy = ref('newest')
+
+const formatCurrency = (value) => {
+  return new Intl.NumberFormat('vi-VN', { 
+    style: 'currency', 
+    currency: 'VND' 
+  }).format(value || 0)
+}
 
 const handleSearch = () => {
   emit('search', searchKeyword.value)
 }
 
 const handleFilter = () => {
-  emit('filter', filterCategory.value)
+  emit('filter', filterPublisher.value)
 }
 
 const handleSort = () => {

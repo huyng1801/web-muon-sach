@@ -5,6 +5,9 @@
       Quản lý Nhà Xuất Bản
     </h2>
 
+    <Toast ref="toast" />
+    <ConfirmModal ref="confirmModal" />
+
     <!-- List View -->
     <NhaXuatBanList
       v-if="currentView === 'list'"
@@ -49,6 +52,8 @@ import { useNhaXuatBanStore } from '@/store/nhaxuatbanStore'
 import NhaXuatBanList from '@/components/Admin/NhaXuatBan/NhaXuatBanList.vue'
 import NhaXuatBanForm from '@/components/Admin/NhaXuatBan/NhaXuatBanForm.vue'
 import NhaXuatBanDetail from '@/components/Admin/NhaXuatBan/NhaXuatBanDetail.vue'
+import Toast from '@/components/Common/Toast.vue'
+import ConfirmModal from '@/components/Common/ConfirmModal.vue'
 
 const nxbStore = useNhaXuatBanStore()
 
@@ -58,6 +63,8 @@ const isEdit = ref(false)
 const error = ref(null)
 const currentPage = ref(1)
 const books = ref([])
+const toast = ref(null)
+const confirmModal = ref(null)
 
 const pagination = computed(() => nxbStore.pagination)
 
@@ -98,9 +105,21 @@ const handleView = async (nxb) => {
 
 const handleDelete = async (id) => {
   try {
-    await nxbStore.deleteNXB(id)
+    const confirmed = await confirmModal.value.show({
+      title: 'Xóa nhà xuất bản',
+      message: 'Bạn có chắc chắn muốn xóa nhà xuất bản này?',
+      type: 'danger',
+      confirmText: 'Xóa'
+    })
+
+    if (confirmed) {
+      await nxbStore.deleteNXB(id)
+      toast.value.showToast('Xóa nhà xuất bản thành công', 'success')
+    }
   } catch (err) {
-    alert('Không thể xóa nhà xuất bản: ' + err.message)
+    if (err !== false) {
+      toast.value.showToast('Không thể xóa nhà xuất bản: ' + (err.response?.data?.message || err.message), 'error')
+    }
   }
 }
 
@@ -123,12 +142,19 @@ const handleSubmit = async (data) => {
     error.value = null
     if (isEdit.value) {
       await nxbStore.updateNXB(selectedNXB.value._id, data)
+      toast.value.showToast('Cập nhật nhà xuất bản thành công', 'success')
     } else {
       await nxbStore.createNXB(data)
+      toast.value.showToast('Thêm nhà xuất bản mới thành công', 'success')
     }
-    currentView.value = 'list'
+    
+    // Wait a bit then go back to list
+    setTimeout(() => {
+      currentView.value = 'list'
+    }, 1500)
   } catch (err) {
     error.value = err.response?.data?.message || 'Có lỗi xảy ra'
+    toast.value.showToast(error.value, 'error')
   }
 }
 </script>

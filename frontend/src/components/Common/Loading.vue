@@ -27,16 +27,33 @@ defineProps({
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.7);
+  background-color: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(2px);
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   z-index: 9999;
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .spinner-border {
   width: 3rem;
   height: 3rem;
+  border-width: 0.3em;
+}
+
+.text-white {
+  font-weight: 500;
+  letter-spacing: 0.5px;
 }
 </style>

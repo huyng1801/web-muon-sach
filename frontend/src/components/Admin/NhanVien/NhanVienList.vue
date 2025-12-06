@@ -9,7 +9,7 @@
               <input 
                 type="text" 
                 class="form-control" 
-                placeholder="Tìm kiếm theo tên, SĐT, email..." 
+                placeholder="Tìm kiếm theo tên, số điện thoại..." 
                 v-model="searchKeyword"
                 @keyup.enter="handleSearch"
               >
@@ -42,41 +42,36 @@
           <table class="table table-hover">
             <thead>
               <tr>
-                <th>MSNV</th>
                 <th>Họ tên</th>
                 <th>Chức vụ</th>
                 <th>Điện thoại</th>
-                <th>Email</th>
                 <th>Địa chỉ</th>
-                <th>Trạng thái</th>
+                <th>Ngày tham gia</th>
                 <th>Thao tác</th>
               </tr>
             </thead>
             <tbody>
               <tr v-for="nv in nhanviens" :key="nv._id">
-                <td><code>{{ nv.MSNV }}</code></td>
                 <td class="fw-bold">{{ nv.HoTenNV }}</td>
                 <td>
-                  <span class="badge bg-info">{{ nv.ChucVu }}</span>
+                  <span class="badge bg-info">{{ nv.Chucvu }}</span>
                 </td>
                 <td>
                   <i class="bi bi-telephone text-muted"></i>
                   {{ nv.SoDienThoai || 'Chưa có' }}
                 </td>
-                <td>
-                  <i class="bi bi-envelope text-muted"></i>
-                  {{ nv.Email || 'Chưa có' }}
-                </td>
                 <td>{{ nv.DiaChi || 'Chưa có' }}</td>
                 <td>
-                  <span 
-                    class="badge" 
-                    :class="nv.isActive ? 'bg-success' : 'bg-secondary'"
-                  >
-                    {{ nv.isActive ? 'Hoạt động' : 'Ngừng hoạt động' }}
-                  </span>
+                  <small class="text-muted">{{ formatDateTime(nv.createdAt) }}</small>
                 </td>
                 <td>
+                  <button 
+                    class="btn btn-sm btn-info me-1" 
+                    @click="$emit('view', nv)"
+                    title="Xem chi tiết"
+                  >
+                    <i class="bi bi-eye"></i>
+                  </button>
                   <button 
                     class="btn btn-sm btn-warning me-1" 
                     @click="$emit('edit', nv)"
@@ -148,18 +143,21 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['add', 'edit', 'delete', 'search', 'page-change'])
+const emit = defineEmits(['add', 'edit', 'view', 'delete', 'search', 'page-change'])
 
 const searchKeyword = ref('')
+
+const formatDateTime = (date) => {
+  if (!date) return 'Chưa có'
+  return new Date(date).toLocaleDateString('vi-VN')
+}
 
 const handleSearch = () => {
   emit('search', searchKeyword.value)
 }
 
 const handleDelete = (nv) => {
-  if (confirm(`Bạn có chắc chắn muốn xóa nhân viên "${nv.HoTenNV}"?`)) {
-    emit('delete', nv._id)
-  }
+  emit('delete', nv._id)
 }
 </script>
 

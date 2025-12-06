@@ -58,8 +58,9 @@ export const useDocGiaStore = defineStore('docgia', () => {
     error.value = null
     try {
       const response = await docgiaService.register(data)
-      docgias.value.unshift(response.data)
-      return response.data
+      const newDocGia = response.data.data || response.data
+      docgias.value.unshift(newDocGia)
+      return newDocGia
     } catch (err) {
       error.value = err.response?.data?.message || 'Không thể tạo độc giả mới'
       throw err
@@ -73,14 +74,15 @@ export const useDocGiaStore = defineStore('docgia', () => {
     error.value = null
     try {
       const response = await docgiaService.update(id, data)
+      const updatedDocGia = response.data.data || response.data
       const index = docgias.value.findIndex(dg => dg._id === id)
       if (index !== -1) {
-        docgias.value[index] = response.data
+        docgias.value[index] = updatedDocGia
       }
       if (currentDocGia.value?._id === id) {
-        currentDocGia.value = response.data
+        currentDocGia.value = updatedDocGia
       }
-      return response.data
+      return updatedDocGia
     } catch (err) {
       error.value = err.response?.data?.message || 'Không thể cập nhật độc giả'
       throw err
@@ -103,12 +105,20 @@ export const useDocGiaStore = defineStore('docgia', () => {
     }
   }
 
-  async function searchDocGias(keyword) {
+  async function searchDocGias(keyword, params = {}) {
     loading.value = true
     error.value = null
     try {
-      const response = await docgiaService.search(keyword)
-      docgias.value = response.data
+      const response = await docgiaService.search(keyword, { page: params.page || 1, limit: params.limit || 10 })
+      docgias.value = response.data.data || []
+      
+      pagination.value = {
+        page: parseInt(response.data.currentPage) || 1,
+        limit: parseInt(params.limit) || 10,
+        total: response.data.total || 0,
+        totalPages: response.data.totalPages || 0
+      }
+      
       return response.data
     } catch (err) {
       error.value = err.response?.data?.message || 'Không thể tìm kiếm độc giả'

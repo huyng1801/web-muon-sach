@@ -1,63 +1,67 @@
 <template>
   <div class="dashboard-page">
-    <h2 class="mb-4">
-      <i class="bi bi-speedometer2"></i>
-      Dashboard
-    </h2>
+    <!-- Page Header -->
+    <div class="page-header mb-5">
+      <h1>
+        <i class="bi bi-speedometer2"></i>
+        Dashboard
+      </h1>
+      <p class="text-muted">Tổng quan thống kê hệ thống quản lý thư viện</p>
+    </div>
 
     <!-- Statistics Cards -->
-    <div class="row mb-4">
-      <div class="col-md-3 mb-3">
-        <div class="card stats-card primary">
+    <div class="row mb-5">
+      <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card stats-card">
           <div class="card-body">
-            <div class="d-flex justify-content-between align-items-center">
-              <div>
-                <h6 class="text-muted mb-2">Tổng sách</h6>
-                <h3 class="mb-0">{{ stats.totalBooks || 0 }}</h3>
-              </div>
-              <i class="bi bi-book fs-1 text-primary"></i>
+            <div class="stat-icon primary">
+              <i class="bi bi-book"></i>
+            </div>
+            <div class="stat-info">
+              <p class="stat-label">Tổng sách</p>
+              <h3 class="stat-value">{{ stats.totalBooks || 0 }}</h3>
             </div>
           </div>
         </div>
       </div>
 
-      <div class="col-md-3 mb-3">
-        <div class="card stats-card success">
+      <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card stats-card">
           <div class="card-body">
-            <div class="d-flex justify-content-between align-items-center">
-              <div>
-                <h6 class="text-muted mb-2">Độc giả</h6>
-                <h3 class="mb-0">{{ stats.totalReaders || 0 }}</h3>
-              </div>
-              <i class="bi bi-people fs-1 text-success"></i>
+            <div class="stat-icon success">
+              <i class="bi bi-people"></i>
+            </div>
+            <div class="stat-info">
+              <p class="stat-label">Độc giả</p>
+              <h3 class="stat-value">{{ stats.totalReaders || 0 }}</h3>
             </div>
           </div>
         </div>
       </div>
 
-      <div class="col-md-3 mb-3">
-        <div class="card stats-card warning">
+      <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card stats-card">
           <div class="card-body">
-            <div class="d-flex justify-content-between align-items-center">
-              <div>
-                <h6 class="text-muted mb-2">Đang mượn</h6>
-                <h3 class="mb-0">{{ stats.currentBorrows || 0 }}</h3>
-              </div>
-              <i class="bi bi-journal-check fs-1 text-warning"></i>
+            <div class="stat-icon warning">
+              <i class="bi bi-journal-check"></i>
+            </div>
+            <div class="stat-info">
+              <p class="stat-label">Đang mượn</p>
+              <h3 class="stat-value">{{ stats.currentBorrows || 0 }}</h3>
             </div>
           </div>
         </div>
       </div>
 
-      <div class="col-md-3 mb-3">
-        <div class="card stats-card danger">
+      <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card stats-card">
           <div class="card-body">
-            <div class="d-flex justify-content-between align-items-center">
-              <div>
-                <h6 class="text-muted mb-2">Quá hạn</h6>
-                <h3 class="mb-0">{{ stats.overdueBooks || 0 }}</h3>
-              </div>
-              <i class="bi bi-exclamation-triangle fs-1 text-danger"></i>
+            <div class="stat-icon danger">
+              <i class="bi bi-exclamation-circle"></i>
+            </div>
+            <div class="stat-info">
+              <p class="stat-label">Quá hạn</p>
+              <h3 class="stat-value">{{ stats.overdueBooks || 0 }}</h3>
             </div>
           </div>
         </div>
@@ -92,7 +96,7 @@
                 </thead>
                 <tbody>
                   <tr v-for="request in pendingRequests" :key="request._id">
-                    <td>{{ request.MaDocGia?.HoTenDem }} {{ request.MaDocGia?.Ten }}</td>
+                    <td>{{ request.MaDocGia?.HoLot }} {{ request.MaDocGia?.Ten }}</td>
                     <td>{{ request.MaSach?.TenSach }}</td>
                     <td>{{ formatDate(request.createdAt) }}</td>
                     <td>
@@ -100,7 +104,7 @@
                     </td>
                     <td>
                       <router-link 
-                        to="/admin/muonsach" 
+                        to="/admin/lich-su-muon" 
                         class="btn btn-sm btn-primary"
                       >
                         Xem
@@ -138,11 +142,11 @@
                     <strong>{{ item.MaSach?.TenSach }}</strong>
                     <br>
                     <small class="text-muted">
-                      {{ item.MaDocGia?.HoTenDem }} {{ item.MaDocGia?.Ten }}
+                      {{ item.MaDocGia?.HoLot }} {{ item.MaDocGia?.Ten }}
                     </small>
                   </div>
                   <span class="badge bg-danger">
-                    {{ daysOverdue(item.NgayTra) }} ngày
+                    {{ daysOverdue(item.NgayHenTra) }} ngày
                   </span>
                 </div>
               </li>
@@ -181,19 +185,46 @@ onMounted(async () => {
 const loadDashboardData = async () => {
   loading.value = true
   try {
-    // Fetch statistics
-    const statsData = await muonSachStore.fetchStatistics()
-    stats.value = statsData
+    // Fetch basic statistics from muonsachs data
+    await muonSachStore.fetchMuonSachs({ limit: 100 })
+    const allRecords = muonSachStore.muonsachs || []
+    
+    // Calculate stats manually
+    stats.value = {
+      totalBooks: allRecords.length,
+      currentBorrows: allRecords.filter(r => !r.NgayTra).length,
+      overdueBooks: allRecords.filter(r => {
+        if (r.NgayTra) return false
+        const today = new Date()
+        const dueDate = new Date(r.NgayHenTra)
+        return today > dueDate
+      }).length,
+      totalReaders: [...new Set(allRecords.map(r => r.MaDocGia?._id))].filter(Boolean).length
+    }
 
-    // Fetch pending requests
-    const pending = await muonSachStore.fetchPendingRequests({ limit: 5 })
-    pendingRequests.value = pending.muonsachs || []
+    // Get pending requests (those without NgayTra)
+    pendingRequests.value = allRecords.filter(r => !r.NgayTra).slice(0, 5)
+    
+    // Get overdue items
+    overdueList.value = allRecords.filter(r => {
+      if (r.NgayTra) return false
+      const today = new Date()
+      const dueDate = new Date(r.NgayHenTra)
+      return today > dueDate
+    }).slice(0, 10)
 
-    // Fetch overdue books
-    const overdue = await muonSachStore.fetchOverdueBooks({ limit: 5 })
-    overdueList.value = overdue.muonsachs || []
+    
   } catch (error) {
     console.error('Error loading dashboard data:', error)
+    // Set default values on error
+    stats.value = {
+      totalBooks: 0,
+      totalReaders: 0,
+      currentBorrows: 0,
+      overdueBooks: 0
+    }
+    pendingRequests.value = []
+    overdueList.value = []
   } finally {
     loading.value = false
   }
@@ -215,19 +246,115 @@ const daysOverdue = (dueDate) => {
 
 <style scoped>
 .dashboard-page {
-  animation: fadeIn 0.5s;
+  animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.page-header {
+  border-bottom: 2px solid #e9ecef;
+  padding-bottom: 20px;
+}
+
+.page-header h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #2c3e50;
+  margin-bottom: 8px;
+}
+
+.page-header p {
+  font-size: 1rem;
+  margin: 0;
 }
 
 .stats-card {
-  transition: all 0.3s ease;
+  height: 100%;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .stats-card:hover {
-  transform: translateY(-5px);
+  transform: translateY(-8px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+}
+
+.stats-card .card-body {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 24px;
+}
+
+.stat-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+}
+
+.stat-icon.primary {
+  background: linear-gradient(135deg, rgba(13, 110, 253, 0.1), rgba(13, 110, 253, 0.05));
+  color: #0d6efd;
+}
+
+.stat-icon.success {
+  background: linear-gradient(135deg, rgba(25, 135, 84, 0.1), rgba(25, 135, 84, 0.05));
+  color: #198754;
+}
+
+.stat-icon.warning {
+  background: linear-gradient(135deg, rgba(255, 193, 7, 0.1), rgba(255, 193, 7, 0.05));
+  color: #ffc107;
+}
+
+.stat-icon.danger {
+  background: linear-gradient(135deg, rgba(220, 53, 69, 0.1), rgba(220, 53, 69, 0.05));
+  color: #dc3545;
+}
+
+.stat-info {
+  flex: 1;
+}
+
+.stat-label {
+  font-size: 0.9rem;
+  color: #6c757d;
+  margin-bottom: 8px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #2c3e50;
+  margin: 0;
 }
 
 .list-group-item {
-  border-left: none;
-  border-right: none;
+  border: none;
+  border-bottom: 1px solid #e9ecef;
+  padding: 15px 0;
+}
+
+.list-group-item:last-child {
+  border-bottom: none;
+}
+
+.card {
+  margin-bottom: 0;
 }
 </style>

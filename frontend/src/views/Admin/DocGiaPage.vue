@@ -5,6 +5,9 @@
       Quản lý Độc Giả
     </h2>
 
+    <Toast ref="toast" />
+    <ConfirmModal ref="confirmModal" />
+
     <!-- List View -->
     <DocGiaList
       v-if="currentView === 'list'"
@@ -48,6 +51,8 @@ import { useDocGiaStore } from '@/store/docgiaStore'
 import DocGiaList from '@/components/Admin/DocGia/DocGiaList.vue'
 import DocGiaForm from '@/components/Admin/DocGia/DocGiaForm.vue'
 import DocGiaDetail from '@/components/Admin/DocGia/DocGiaDetail.vue'
+import Toast from '@/components/Common/Toast.vue'
+import ConfirmModal from '@/components/Common/ConfirmModal.vue'
 
 const docgiaStore = useDocGiaStore()
 const currentView = ref('list') // 'list', 'form', 'detail'
@@ -55,6 +60,8 @@ const selectedDocGia = ref(null)
 const isEdit = ref(false)
 const error = ref(null)
 const currentPage = ref(1)
+const toast = ref(null)
+const confirmModal = ref(null)
 
 const pagination = computed(() => docgiaStore.pagination)
 
@@ -94,9 +101,21 @@ const handleView = (docgia) => {
 
 const handleDelete = async (id) => {
   try {
-    await docgiaStore.deleteDocGia(id)
+    const confirmed = await confirmModal.value.show({
+      title: 'Xóa độc giả',
+      message: 'Bạn có chắc chắn muốn xóa độc giả này?',
+      type: 'danger',
+      confirmText: 'Xóa'
+    })
+
+    if (confirmed) {
+      await docgiaStore.deleteDocGia(id)
+      toast.value.showToast('Xóa độc giả thành công', 'success')
+    }
   } catch (err) {
-    alert('Không thể xóa độc giả: ' + err.message)
+    if (err !== false) {
+      toast.value.showToast('Không thể xóa độc giả: ' + (err.response?.data?.message || err.message), 'error')
+    }
   }
 }
 
@@ -118,12 +137,19 @@ const handleSubmit = async (data) => {
     error.value = null
     if (isEdit.value) {
       await docgiaStore.updateDocGia(selectedDocGia.value._id, data)
+      toast.value.showToast('Cập nhật thông tin độc giả thành công', 'success')
     } else {
       await docgiaStore.createDocGia(data)
+      toast.value.showToast('Thêm độc giả mới thành công', 'success')
     }
-    currentView.value = 'list'
+    
+    // Wait a bit then go back to list
+    setTimeout(() => {
+      currentView.value = 'list'
+    }, 1500)
   } catch (err) {
     error.value = err.response?.data?.message || 'Có lỗi xảy ra'
+    toast.value.showToast(error.value, 'error')
   }
 }
 </script>

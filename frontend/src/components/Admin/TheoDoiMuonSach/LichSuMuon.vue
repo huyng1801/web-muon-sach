@@ -7,9 +7,11 @@
           <div class="col-md-3">
             <select class="form-select" v-model="filter.status" @change="handleFilter">
               <option value="">Tất cả trạng thái</option>
-              <option value="borrowing">Đang mượn</option>
-              <option value="returned">Đã trả</option>
-              <option value="overdue">Quá hạn</option>
+              <option value="Chờ duyệt">Chờ duyệt</option>
+              <option value="Đang mượn">Đang mượn</option>
+              <option value="Đã trả">Đã trả</option>
+              <option value="Quá hạn">Quá hạn</option>
+              <option value="Từ chối">Từ chối</option>
             </select>
           </div>
           <div class="col-md-3">
@@ -58,6 +60,11 @@
           <p class="mt-2">Không có lịch sử mượn sách</p>
         </div>
 
+        <div v-else-if="filteredRecords.length === 0" class="text-center py-5 text-muted">
+          <i class="bi bi-funnel fs-1"></i>
+          <p class="mt-2">Không có kết quả phù hợp với điều kiện lọc</p>
+        </div>
+
         <div v-else class="table-responsive">
           <table class="table table-hover">
             <thead>
@@ -74,9 +81,9 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="record in records" :key="record._id" :class="getRowClass(record)">
+              <tr v-for="record in filteredRecords" :key="record._id" :class="getRowClass(record)">
                 <td>
-                  <code>{{ record.MaPhieu || record._id.slice(-6) }}</code>
+                  <code>{{ record.MaPhieu || (record._id ? record._id.slice(-6) : 'N/A') }}</code>
                 </td>
                 <td>
                   <div class="fw-bold">
@@ -104,14 +111,35 @@
                   </span>
                 </td>
                 <td>
+                  <!-- Approve/Reject for pending requests -->
+                  <div v-if="record.TrangThai === 'Chờ duyệt'" class="btn-group btn-group-sm">
+                    <button 
+                      class="btn btn-sm btn-success" 
+                      @click="$emit('approve-request', record)"
+                      title="Duyệt yêu cầu"
+                    >
+                      <i class="bi bi-check-lg"></i>
+                    </button>
+                    <button 
+                      class="btn btn-sm btn-danger" 
+                      @click="$emit('reject-request', record)"
+                      title="Từ chối"
+                    >
+                      <i class="bi bi-x-lg"></i>
+                    </button>
+                  </div>
+                  
+                  <!-- Return book for approved requests -->
                   <button 
-                    v-if="!record.NgayTra"
-                    class="btn btn-sm btn-success me-1" 
+                    v-else-if="record.TrangThai === 'Đang mượn' && !record.NgayTra"
+                    class="btn btn-sm btn-success" 
                     @click="$emit('return-book', record)"
                     title="Trả sách"
                   >
-                    <i class="bi bi-check-circle"></i>
+                    <i class="bi bi-arrow-return-left"></i>
                   </button>
+                  
+                  <!-- View detail button -->
                   <button 
                     class="btn btn-sm btn-info" 
                     @click="$emit('view-detail', record)"
@@ -159,12 +187,12 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 
 const props = defineProps({
   records: {
     type: Array,
-    required: true
+    default: () => []
   },
   docgias: {
     type: Array,
@@ -180,13 +208,33 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['filter', 'return-book', 'view-detail', 'page-change'])
+const emit = defineEmits(['filter', 'approve-request', 'reject-request', 'return-book', 'view-detail', 'page-change'])
 
 const filter = ref({
   status: '',
   docgia: '',
   fromDate: '',
   toDate: ''
+})
+
+// Filter records client-side for date range
+const filteredRecords = computed(() => {
+  return props.records.filter(record => {
+    // Date range filtering
+    if (filter.value.fromDate) {
+      const fromDate = new Date(filter.value.fromDate)
+      const recordDate = new Date(record.NgayMuon)
+      if (recordDate < fromDate) return false
+    }
+    
+    if (filter.value.toDate) {
+      const toDate = new Date(filter.value.toDate)
+      const recordDate = new Date(record.NgayMuon)
+      if (recordDate > toDate) return false
+    }
+    
+    return true
+  })
 })
 
 const handleFilter = () => {
@@ -213,15 +261,26 @@ const getDaysOverdue = (record) => {
 }
 
 const getStatusText = (record) => {
+  // Use TrangThai from model first, then fallback to calculated status
+  if (record.TrangThai) {
+    return record.TrangThai
+  }
+  // Fallback for old records
   if (record.NgayTra) return 'Đã trả'
   if (isOverdue(record)) return 'Quá hạn'
   return 'Đang mượn'
 }
 
 const getStatusBadgeClass = (record) => {
-  if (record.NgayTra) return 'bg-success'
-  if (isOverdue(record)) return 'bg-danger'
-  return 'bg-warning'
+  const status = record.TrangThai || getStatusText(record)
+  switch (status) {
+    case 'Chờ duyệt': return 'bg-warning'
+    case 'Đang mượn': return 'bg-primary'
+    case 'Đã trả': return 'bg-success'
+    case 'Quá hạn': return 'bg-danger'
+    case 'Từ chối': return 'bg-secondary'
+    default: return 'bg-info'
+  }
 }
 
 const getRowClass = (record) => {

@@ -39,14 +39,8 @@
                   <td>{{ sach.ISBN }}</td>
                 </tr>
                 <tr>
-                  <th>Tác giả</th>
-                  <td>{{ sach.TacGia || 'Không rõ' }}</td>
-                </tr>
-                <tr>
-                  <th>Thể loại</th>
-                  <td>
-                    <span class="badge bg-info">{{ sach.TheLoai || 'Chưa phân loại' }}</span>
-                  </td>
+                  <th>Nguồn gốc/Tác giả</th>
+                  <td>{{ sach.NguonGoc_TacGia || 'Không rõ' }}</td>
                 </tr>
                 <tr>
                   <th>Nhà xuất bản</th>
@@ -55,14 +49,6 @@
                 <tr>
                   <th>Năm xuất bản</th>
                   <td>{{ sach.NamXuatBan || 'Không rõ' }}</td>
-                </tr>
-                <tr>
-                  <th>Số trang</th>
-                  <td>{{ sach.SoTrang || 'Không rõ' }}</td>
-                </tr>
-                <tr>
-                  <th>Ngôn ngữ</th>
-                  <td>{{ sach.NgonNgu || 'Không rõ' }}</td>
                 </tr>
                 <tr>
                   <th>Số lượng</th>
@@ -74,11 +60,6 @@
                 </tr>
               </tbody>
             </table>
-
-            <div v-if="sach.MoTa" class="mt-3">
-              <h6>Mô tả:</h6>
-              <p class="text-muted">{{ sach.MoTa }}</p>
-            </div>
 
             <div class="mt-3">
               <small class="text-muted">

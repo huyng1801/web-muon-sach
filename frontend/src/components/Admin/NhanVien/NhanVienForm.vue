@@ -2,19 +2,6 @@
   <div class="nhan-vien-form">
     <form @submit.prevent="handleSubmit">
       <div class="mb-3">
-        <label class="form-label">MSNV <span class="text-danger">*</span></label>
-        <input 
-          type="text" 
-          class="form-control" 
-          v-model="formData.MSNV"
-          required
-          :disabled="isEdit"
-          placeholder="VD: NV001"
-        >
-        <small class="text-muted">Mã số nhân viên duy nhất</small>
-      </div>
-
-      <div class="mb-3">
         <label class="form-label">Họ tên <span class="text-danger">*</span></label>
         <input 
           type="text" 
@@ -28,9 +15,9 @@
       <div class="row">
         <div class="col-md-6 mb-3">
           <label class="form-label">Chức vụ <span class="text-danger">*</span></label>
-          <select class="form-select" v-model="formData.ChucVu" required>
+          <select class="form-select" v-model="formData.Chucvu" required>
             <option value="">Chọn chức vụ</option>
-            <option value="Quản lý">Quản lý</option>
+            <option value="Admin">Admin</option>
             <option value="Thủ thư">Thủ thư</option>
             <option value="Nhân viên">Nhân viên</option>
           </select>
@@ -48,16 +35,6 @@
       </div>
 
       <div class="mb-3">
-        <label class="form-label">Email</label>
-        <input 
-          type="email" 
-          class="form-control" 
-          v-model="formData.Email"
-          placeholder="VD: nhanvien@library.com"
-        >
-      </div>
-
-      <div class="mb-3">
         <label class="form-label">Địa chỉ</label>
         <textarea 
           class="form-control" 
@@ -67,18 +44,27 @@
         ></textarea>
       </div>
 
-      <div class="mb-3">
-        <div class="form-check">
-          <input 
-            class="form-check-input" 
-            type="checkbox" 
-            v-model="formData.isActive"
-            id="isActive"
-          >
-          <label class="form-check-label" for="isActive">
-            Đang hoạt động
-          </label>
-        </div>
+      <div class="mb-3" v-if="!isEdit">
+        <label class="form-label">Mật khẩu <span class="text-danger">*</span></label>
+        <input 
+          type="password" 
+          class="form-control" 
+          v-model="formData.Password"
+          required
+          placeholder="Nhập mật khẩu ít nhất 6 ký tự"
+          minlength="6"
+        >
+      </div>
+
+      <div class="mb-3" v-if="isEdit">
+        <label class="form-label">Mật khẩu mới (để trống nếu không đổi)</label>
+        <input 
+          type="password" 
+          class="form-control" 
+          v-model="formData.Password"
+          placeholder="Nhập mật khẩu ít nhất 6 ký tự"
+          minlength="6"
+        >
       </div>
 
       <div v-if="error" class="alert alert-danger">
@@ -125,13 +111,11 @@ const props = defineProps({
 const emit = defineEmits(['submit', 'cancel'])
 
 const formData = ref({
-  MSNV: '',
   HoTenNV: '',
-  ChucVu: '',
+  Chucvu: '',
   SoDienThoai: '',
-  Email: '',
   DiaChi: '',
-  isActive: true
+  Password: ''
 })
 
 // Watch for nhanvien prop changes (when editing)

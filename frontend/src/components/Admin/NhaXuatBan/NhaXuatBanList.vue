@@ -42,46 +42,42 @@
           <table class="table table-hover">
             <thead>
               <tr>
-                <th>#</th>
                 <th>Tên nhà xuất bản</th>
                 <th>Địa chỉ</th>
                 <th>Ngày tạo</th>
-                <th class="text-center">Thao tác</th>
+                <th>Thao tác</th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="(nxb, index) in nhaxuatbans" :key="nxb._id">
-                <td>{{ (pagination.page - 1) * pagination.limit + index + 1 }}</td>
+              <tr v-for="nxb in nhaxuatbans" :key="nxb._id">
                 <td class="fw-bold">{{ nxb.TenNXB }}</td>
                 <td>
                   <i class="bi bi-geo-alt text-muted"></i>
                   {{ nxb.DiaChi || 'Chưa có địa chỉ' }}
                 </td>
                 <td>{{ formatDate(nxb.createdAt) }}</td>
-                <td class="text-center">
-                  <div class="btn-group btn-group-sm">
-                    <button 
-                      class="btn btn-outline-info" 
-                      @click="$emit('view', nxb)"
-                      title="Xem chi tiết"
-                    >
-                      <i class="bi bi-eye"></i>
-                    </button>
-                    <button 
-                      class="btn btn-outline-warning" 
-                      @click="$emit('edit', nxb)"
-                      title="Chỉnh sửa"
-                    >
-                      <i class="bi bi-pencil"></i>
-                    </button>
-                    <button 
-                      class="btn btn-outline-danger" 
-                      @click="confirmDelete(nxb)"
-                      title="Xóa"
-                    >
-                      <i class="bi bi-trash"></i>
-                    </button>
-                  </div>
+                <td>
+                  <button 
+                    class="btn btn-sm btn-info me-1" 
+                    @click="$emit('view', nxb)"
+                    title="Xem chi tiết"
+                  >
+                    <i class="bi bi-eye"></i>
+                  </button>
+                  <button 
+                    class="btn btn-sm btn-warning me-1" 
+                    @click="$emit('edit', nxb)"
+                    title="Chỉnh sửa"
+                  >
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                  <button 
+                    class="btn btn-sm btn-danger" 
+                    @click="handleDelete(nxb)"
+                    title="Xóa"
+                  >
+                    <i class="bi bi-trash"></i>
+                  </button>
                 </td>
               </tr>
             </tbody>
@@ -149,12 +145,6 @@ const handleSearch = () => {
 
 const handleDelete = (nxb) => {
   emit('delete', nxb._id)
-}
-
-const confirmDelete = (nxb) => {
-  if (confirm(`Bạn có chắc chắn muốn xóa nhà xuất bản "${nxb.TenNXB}"?`)) {
-    handleDelete(nxb)
-  }
 }
 
 const formatDate = (date) => {

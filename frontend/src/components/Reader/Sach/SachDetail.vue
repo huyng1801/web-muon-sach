@@ -50,27 +50,28 @@
                       <th width="150">
                         <i class="bi bi-upc-scan"></i> ISBN
                       </th>
-                      <td><code>{{ sach.ISBN }}</code></td>
+                      <td><code>{{ sach.ISBN || 'N/A' }}</code></td>
                     </tr>
                     <tr>
                       <th>
                         <i class="bi bi-person"></i> Tác giả
                       </th>
-                      <td>{{ sach.TacGia || 'Không rõ' }}</td>
+                      <td>{{ sach.NguonGoc_TacGia || 'Không rõ' }}</td>
                     </tr>
                     <tr>
                       <th>
-                        <i class="bi bi-tag"></i> Thể loại
+                        <i class="bi bi-calendar"></i> Năm XB
                       </th>
-                      <td>
-                        <span class="badge bg-info">{{ sach.TheLoai || 'Chưa phân loại' }}</span>
-                      </td>
+                      <td>{{ sach.NamXuatBan || 'N/A' }}</td>
                     </tr>
                     <tr>
                       <th>
                         <i class="bi bi-building"></i> NXB
                       </th>
-                      <td>{{ sach.MaNXB?.TenNXB || 'Không rõ' }}</td>
+                      <td>
+                        <span v-if="sach.MaNXB">{{ typeof sach.MaNXB === 'string' ? 'Không rõ' : (sach.MaNXB.TenNXB || 'Không rõ') }}</span>
+                        <span v-else>Không rõ</span>
+                      </td>
                     </tr>
                   </tbody>
                 </table>

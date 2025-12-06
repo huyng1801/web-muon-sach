@@ -43,7 +43,7 @@ export const theodoimuonsachService = {
 
   // Lấy lịch sử mượn sách của độc giả hiện tại
   getMyHistory(params) {
-    return api.get('/theodoimuonsach/my-history', { params })
+    return api.get('/theodoimuonsach/user/history', { params })
   },
 
   // Lấy danh sách sách đang mượn của độc giả hiện tại

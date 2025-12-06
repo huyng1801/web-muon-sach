@@ -41,9 +41,14 @@ export const docgiaService = {
     return api.put('/docgia/profile', data)
   },
 
+  // Đổi mật khẩu độc giả
+  changePassword(data) {
+    return api.post('/docgia/change-password', data)
+  },
+
   // Tìm kiếm độc giả
-  search(keyword) {
-    return api.get('/docgia/search', { params: { keyword } })
+  search(keyword, params = {}) {
+    return api.get('/docgia', { params: { search: keyword, ...params } })
   }
 }
 

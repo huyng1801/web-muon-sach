@@ -25,29 +25,14 @@
       </div>
 
       <div class="row">
-        <div class="col-md-6 mb-3">
-          <label class="form-label">Tác giả</label>
+        <div class="col-md-12 mb-3">
+          <label class="form-label">Nguồn gốc / Tác giả</label>
           <input 
             type="text" 
             class="form-control" 
-            v-model="formData.TacGia"
-            placeholder="Nhập tên tác giả"
+            v-model="formData.NguonGoc_TacGia"
+            placeholder="Nhập nguồn gốc hoặc tên tác giả"
           >
-        </div>
-        <div class="col-md-6 mb-3">
-          <label class="form-label">Thể loại</label>
-          <select class="form-select" v-model="formData.TheLoai">
-            <option value="">Chọn thể loại</option>
-            <option value="Văn học">Văn học</option>
-            <option value="Khoa học">Khoa học</option>
-            <option value="Công nghệ">Công nghệ</option>
-            <option value="Lịch sử">Lịch sử</option>
-            <option value="Kinh tế">Kinh tế</option>
-            <option value="Nghệ thuật">Nghệ thuật</option>
-            <option value="Triết học">Triết học</option>
-            <option value="Tâm lý">Tâm lý</option>
-            <option value="Khác">Khác</option>
-          </select>
         </div>
       </div>
 
@@ -102,40 +87,6 @@
         </div>
       </div>
 
-      <div class="mb-3">
-        <label class="form-label">Mô tả</label>
-        <textarea 
-          class="form-control" 
-          v-model="formData.MoTa"
-          rows="4"
-          placeholder="Nhập mô tả chi tiết về sách..."
-        ></textarea>
-      </div>
-
-      <div class="row">
-        <div class="col-md-6 mb-3">
-          <label class="form-label">Số trang</label>
-          <input 
-            type="number" 
-            class="form-control" 
-            v-model.number="formData.SoTrang"
-            min="1"
-          >
-        </div>
-        <div class="col-md-6 mb-3">
-          <label class="form-label">Ngôn ngữ</label>
-          <select class="form-select" v-model="formData.NgonNgu">
-            <option value="">Chọn ngôn ngữ</option>
-            <option value="Tiếng Việt">Tiếng Việt</option>
-            <option value="Tiếng Anh">Tiếng Anh</option>
-            <option value="Tiếng Pháp">Tiếng Pháp</option>
-            <option value="Tiếng Trung">Tiếng Trung</option>
-            <option value="Tiếng Nhật">Tiếng Nhật</option>
-            <option value="Khác">Khác</option>
-          </select>
-        </div>
-      </div>
-
       <div v-if="error" class="alert alert-danger">
         {{ error }}
       </div>
@@ -186,23 +137,39 @@ const emit = defineEmits(['submit', 'cancel'])
 const formData = ref({
   ISBN: '',
   TenSach: '',
-  TacGia: '',
-  TheLoai: '',
+  NguonGoc_TacGia: '',
   MaNXB: '',
   NamXuatBan: new Date().getFullYear(),
   SoQuyen: 1,
-  DonGia: 0,
-  MoTa: '',
-  SoTrang: null,
-  NgonNgu: 'Tiếng Việt'
+  DonGia: 0
 })
+
+// Generate a random ISBN-like code (13 digits starting with 978)
+const generateISBN = () => {
+  const prefix = '978'
+  const randomPart = Math.random().toString().slice(2, 10).padEnd(8, '0')
+  const checkDigit = Math.floor(Math.random() * 10)
+  return prefix + randomPart + checkDigit
+}
 
 // Watch for sach prop changes (when editing)
 watch(() => props.sach, (newVal) => {
   if (newVal) {
+    // Editing - use existing data
     formData.value = {
       ...newVal,
       MaNXB: newVal.MaNXB?._id || newVal.MaNXB
+    }
+  } else if (!props.isEdit) {
+    // Adding new - generate ISBN
+    formData.value = {
+      ISBN: generateISBN(),
+      TenSach: '',
+      NguonGoc_TacGia: '',
+      MaNXB: '',
+      NamXuatBan: new Date().getFullYear(),
+      SoQuyen: 1,
+      DonGia: 0
     }
   }
 }, { immediate: true })

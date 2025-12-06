@@ -7,7 +7,7 @@ const { validateMuonSach, validate } = require('../middleware/validation');
 // ========== ROUTES CHO ĐỘC GIẢ ==========
 // Đăng ký mượn sách và xem lịch sử
 router.post('/', protect, isReader, validateMuonSach, validate, theodoimuonsachController.createMuonSach);
-router.get('/user/history', protect, isReader, theodoimuonsachController.getUserHistory);
+router.get('/user/history', protect, theodoimuonsachController.getUserHistory);
 
 // ========== ROUTES CHO NHÂN VIÊN ==========
 // Quản lý mượn/trả sách

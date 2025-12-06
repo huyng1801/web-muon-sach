@@ -14,23 +14,29 @@
       <div class="card-body">
         <div class="row">
           <div class="col-md-6 mb-3">
-            <label class="text-muted small">Mã độc giả</label>
-            <p class="fw-bold">{{ docgia.MaDocGia || 'Chưa có' }}</p>
+            <label class="text-muted small">Họ lót</label>
+            <p class="fw-bold">{{ docgia.HoLot }}</p>
           </div>
           <div class="col-md-6 mb-3">
-            <label class="text-muted small">Họ và tên</label>
-            <p class="fw-bold">{{ docgia.HoTenDem }} {{ docgia.Ten }}</p>
+            <label class="text-muted small">Tên</label>
+            <p class="fw-bold">{{ docgia.Ten }}</p>
           </div>
         </div>
 
         <div class="row">
           <div class="col-md-6 mb-3">
-            <label class="text-muted small">Ngày sinh</label>
-            <p>{{ formatDate(docgia.NgaySinh) }}</p>
+            <label class="text-muted small">Email</label>
+            <p>
+              <i class="bi bi-envelope"></i>
+              {{ docgia.Email }}
+            </p>
           </div>
           <div class="col-md-6 mb-3">
-            <label class="text-muted small">Giới tính</label>
-            <p>{{ docgia.Phai || 'Không xác định' }}</p>
+            <label class="text-muted small">Số điện thoại</label>
+            <p>
+              <i class="bi bi-telephone"></i>
+              {{ docgia.DienThoai }}
+            </p>
           </div>
         </div>
 
@@ -41,29 +47,30 @@
 
         <div class="row">
           <div class="col-md-6 mb-3">
-            <label class="text-muted small">Số điện thoại</label>
-            <p>
-              <i class="bi bi-telephone"></i>
-              {{ docgia.DienThoai }}
-            </p>
+            <label class="text-muted small">Ngày sinh</label>
+            <p>{{ formatDate(docgia.NgaySinh) || 'Không xác định' }}</p>
           </div>
           <div class="col-md-6 mb-3">
-            <label class="text-muted small">Email</label>
-            <p>
-              <i class="bi bi-envelope"></i>
-              {{ docgia.Email || 'Chưa có' }}
-            </p>
+            <label class="text-muted small">Giới tính</label>
+            <p>{{ docgia.Phai || 'Không xác định' }}</p>
           </div>
         </div>
 
         <div class="row">
           <div class="col-md-6 mb-3">
-            <label class="text-muted small">Ngày đăng ký</label>
-            <p>{{ formatDateTime(docgia.createdAt) }}</p>
+            <label class="text-muted small">Trạng thái</label>
+            <p>
+              <span 
+                class="badge"
+                :class="docgia.TrangThai === 'Hoạt động' ? 'bg-success' : 'bg-danger'"
+              >
+                {{ docgia.TrangThai }}
+              </span>
+            </p>
           </div>
           <div class="col-md-6 mb-3">
-            <label class="text-muted small">Cập nhật lần cuối</label>
-            <p>{{ formatDateTime(docgia.updatedAt) }}</p>
+            <label class="text-muted small">Ngày đăng ký</label>
+            <p>{{ formatDateTime(docgia.NgayDangKy) }}</p>
           </div>
         </div>
 

@@ -1,5 +1,6 @@
 <template>
   <div class="container-fluid">
+    <Toast ref="toastRef" />
     <h2 class="mb-4">
       <i class="bi bi-search"></i>
       Tìm kiếm sách
@@ -15,55 +16,18 @@
               <input 
                 type="text" 
                 class="form-control" 
-                v-model="searchForm.TenSach"
-                placeholder="Nhập tên sách..."
+                v-model="searchForm.keyword"
+                placeholder="Nhập tên sách, tác giả hoặc ISBN..."
               >
             </div>
             <div class="col-md-6 mb-3">
-              <label class="form-label">Tác giả</label>
-              <input 
-                type="text" 
-                class="form-control" 
-                v-model="searchForm.TacGia"
-                placeholder="Nhập tên tác giả..."
-              >
-            </div>
-          </div>
-
-          <div class="row">
-            <div class="col-md-4 mb-3">
-              <label class="form-label">ISBN</label>
-              <input 
-                type="text" 
-                class="form-control" 
-                v-model="searchForm.ISBN"
-                placeholder="Nhập ISBN..."
-              >
-            </div>
-            <div class="col-md-4 mb-3">
-              <label class="form-label">Thể loại</label>
-              <select class="form-select" v-model="searchForm.TheLoai">
-                <option value="">Tất cả</option>
-                <option value="Văn học">Văn học</option>
-                <option value="Khoa học">Khoa học</option>
-                <option value="Công nghệ">Công nghệ</option>
-                <option value="Lịch sử">Lịch sử</option>
-                <option value="Kinh tế">Kinh tế</option>
-                <option value="Nghệ thuật">Nghệ thuật</option>
-                <option value="Tâm lý">Tâm lý</option>
-                <option value="Khác">Khác</option>
+              <label class="form-label">Nhà xuất bản</label>
+              <select class="form-select" v-model="searchForm.MaNXB">
+                <option value="">Tất cả nhà xuất bản</option>
+                <option v-for="nxb in publishers" :key="nxb._id" :value="nxb._id">
+                  {{ nxb.TenNXB }}
+                </option>
               </select>
-            </div>
-            <div class="col-md-4 mb-3">
-              <label class="form-label">Năm xuất bản</label>
-              <input 
-                type="number" 
-                class="form-control" 
-                v-model="searchForm.NamXuatBan"
-                placeholder="Nhập năm..."
-                min="1900"
-                :max="new Date().getFullYear()"
-              >
             </div>
           </div>
 
@@ -108,13 +72,19 @@
               <p class="card-text">
                 <small class="text-muted">
                   <i class="bi bi-person"></i>
-                  {{ sach.TacGia || 'Không rõ tác giả' }}
+                  {{ sach.NguonGoc_TacGia || 'Không rõ tác giả' }}
                 </small>
               </p>
               <p class="card-text">
                 <small class="text-muted">
-                  <i class="bi bi-tag"></i>
-                  {{ sach.TheLoai || 'Chưa phân loại' }}
+                  <i class="bi bi-buildings"></i>
+                  {{ sach.MaNXB?.TenNXB || 'N/A' }}
+                </small>
+              </p>
+              <p class="card-text">
+                <small class="text-muted">
+                  <i class="bi bi-cash"></i>
+                  {{ formatCurrency(sach.DonGia) }}
                 </small>
               </p>
               <p class="card-text">
@@ -140,34 +110,49 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useSachStore } from '@/store/sachStore'
+import { sachService } from '@/services/sachService'
+import Toast from '@/components/Common/Toast.vue'
 
 const sachStore = useSachStore()
+const toastRef = ref(null)
+const publishers = ref([])
 
 const searchForm = ref({
-  TenSach: '',
-  TacGia: '',
-  ISBN: '',
-  TheLoai: '',
-  NamXuatBan: ''
+  keyword: '',
+  MaNXB: ''
 })
 
 const results = ref([])
 const searching = ref(false)
 const searched = ref(false)
 
+onMounted(async () => {
+  try {
+    // Load publishers for filter
+    const response = await sachService.getPublishers()
+    publishers.value = response.data || []
+  } catch (error) {
+    console.error('Error loading publishers:', error)
+  }
+})
+
+const formatCurrency = (value) => {
+  return new Intl.NumberFormat('vi-VN', { 
+    style: 'currency', 
+    currency: 'VND' 
+  }).format(value || 0)
+}
+
 const handleSearch = async () => {
-  // Build search params from non-empty fields
+  // Build search params
   const params = {}
-  if (searchForm.value.TenSach) params.TenSach = searchForm.value.TenSach
-  if (searchForm.value.TacGia) params.TacGia = searchForm.value.TacGia
-  if (searchForm.value.ISBN) params.ISBN = searchForm.value.ISBN
-  if (searchForm.value.TheLoai) params.TheLoai = searchForm.value.TheLoai
-  if (searchForm.value.NamXuatBan) params.NamXuatBan = searchForm.value.NamXuatBan
+  if (searchForm.value.keyword) params.search = searchForm.value.keyword
+  if (searchForm.value.MaNXB) params.MaNXB = searchForm.value.MaNXB
 
   if (Object.keys(params).length === 0) {
-    alert('Vui lòng nhập ít nhất một tiêu chí tìm kiếm')
+    toastRef.value?.showToast('Vui lòng nhập ít nhất một tiêu chí tìm kiếm', 'warning')
     return
   }
 
@@ -175,11 +160,12 @@ const handleSearch = async () => {
   searched.value = false
   
   try {
-    const response = await sachStore.fetchSachs({ ...params, limit: 100 })
-    results.value = response.sachs || response || []
+    const response = await sachService.getAll({ ...params, limit: 100 })
+    results.value = response.data || []
     searched.value = true
   } catch (error) {
-    alert('Có lỗi xảy ra khi tìm kiếm')
+    console.error('Search error:', error)
+    toastRef.value?.showToast('Có lỗi xảy ra khi tìm kiếm', 'error')
     results.value = []
   } finally {
     searching.value = false
@@ -188,11 +174,8 @@ const handleSearch = async () => {
 
 const handleReset = () => {
   searchForm.value = {
-    TenSach: '',
-    TacGia: '',
-    ISBN: '',
-    TheLoai: '',
-    NamXuatBan: ''
+    keyword: '',
+    MaNXB: ''
   }
   results.value = []
   searched.value = false

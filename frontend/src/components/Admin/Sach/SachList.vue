@@ -17,14 +17,15 @@
             </div>
           </div>
           <div class="col-md-3">
-            <select class="form-select" v-model="filterCategory" @change="handleFilter">
-              <option value="">Tất cả thể loại</option>
-              <option value="Văn học">Văn học</option>
-              <option value="Khoa học">Khoa học</option>
-              <option value="Công nghệ">Công nghệ</option>
-              <option value="Lịch sử">Lịch sử</option>
-              <option value="Kinh tế">Kinh tế</option>
-              <option value="Nghệ thuật">Nghệ thuật</option>
+            <select class="form-select" v-model="filterNXB" @change="handleFilter">
+              <option value="">Tất cả NXB</option>
+              <option 
+                v-for="nxb in nhaxuatbans" 
+                :key="nxb._id" 
+                :value="nxb.TenNXB"
+              >
+                {{ nxb.TenNXB }}
+              </option>
             </select>
           </div>
           <div class="col-md-3 text-end">
@@ -55,8 +56,7 @@
               <tr>
                 <th>ISBN</th>
                 <th>Tên sách</th>
-                <th>Tác giả</th>
-                <th>Thể loại</th>
+                <th>Nguồn gốc/Tác giả</th>
                 <th>NXB</th>
                 <th>Năm XB</th>
                 <th>Số quyển</th>
@@ -68,10 +68,7 @@
               <tr v-for="sach in sachs" :key="sach._id">
                 <td>{{ sach.ISBN }}</td>
                 <td class="fw-bold">{{ sach.TenSach }}</td>
-                <td>{{ sach.TacGia }}</td>
-                <td>
-                  <span class="badge bg-info">{{ sach.TheLoai }}</span>
-                </td>
+                <td>{{ sach.NguonGoc_TacGia || 'N/A' }}</td>
                 <td>{{ sach.MaNXB?.TenNXB || 'N/A' }}</td>
                 <td>{{ sach.NamXuatBan }}</td>
                 <td>
@@ -159,26 +156,28 @@ const props = defineProps({
   pagination: {
     type: Object,
     default: () => ({ page: 1, limit: 10, total: 0, totalPages: 0 })
+  },
+  nhaxuatbans: {
+    type: Array,
+    default: () => []
   }
 })
 
 const emit = defineEmits(['add', 'edit', 'view', 'delete', 'search', 'filter', 'page-change'])
 
 const searchKeyword = ref('')
-const filterCategory = ref('')
+const filterNXB = ref('')
 
 const handleSearch = () => {
   emit('search', searchKeyword.value)
 }
 
 const handleFilter = () => {
-  emit('filter', filterCategory.value)
+  emit('filter', filterNXB.value)
 }
 
 const handleDelete = (sach) => {
-  if (confirm(`Bạn có chắc chắn muốn xóa sách "${sach.TenSach}"?`)) {
-    emit('delete', sach._id)
-  }
+  emit('delete', sach._id)
 }
 
 const formatCurrency = (value) => {

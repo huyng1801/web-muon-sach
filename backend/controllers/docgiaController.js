@@ -484,6 +484,20 @@ exports.updateDocGiaStatus = async (req, res) => {
 // @access  Private (Admin)
 exports.deleteDocGia = async (req, res) => {
   try {
+    // Kiểm tra xem độc giả đó có đang mượn sách không
+    const TheoDoiMuonSach = require('../models/TheoDoiMuonSach');
+    const borrowCount = await TheoDoiMuonSach.countDocuments({ 
+      MaDocGia: req.params.id,
+      TrangThai: { $in: ['Đang mượn', 'Quá hạn'] }
+    });
+    
+    if (borrowCount > 0) {
+      return res.status(400).json({
+        success: false,
+        message: `Không thể xóa độc giả này vì họ đang mượn ${borrowCount} cuốn sách. Vui lòng ghi nhận trả sách trước.`
+      });
+    }
+
     const docGia = await DocGia.findByIdAndDelete(req.params.id);
 
     if (!docGia) {

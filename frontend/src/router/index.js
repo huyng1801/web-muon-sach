@@ -60,8 +60,22 @@ const routes = [
       },
       {
         path: 'muonsach',
-        name: 'AdminMuonSach',
-        component: () => import('@/views/Admin/MuonSachPage.vue')
+        redirect: '/admin/lich-su-muon'
+      },
+      {
+        path: 'lich-su-muon',
+        name: 'AdminLichSuMuon',
+        component: () => import('@/views/Admin/LichSuMuonPage.vue')
+      },
+      {
+        path: 'tra-sach',
+        name: 'AdminTraSach',
+        component: () => import('@/views/Admin/TraSachPage.vue')
+      },
+      {
+        path: 'muon-sach/:id',
+        name: 'AdminChiTietMuonSach',
+        component: () => import('@/views/Admin/ChiTietMuonSachPage.vue')
       },
       {
         path: 'nhanvien',
@@ -73,6 +87,11 @@ const routes = [
         path: 'profile',
         name: 'AdminProfile',
         component: () => import('@/views/Auth/ProfilePage.vue')
+      },
+      {
+        path: 'change-password',
+        name: 'AdminChangePassword',
+        component: () => import('@/views/Auth/ChangePasswordPage.vue')
       }
     ]
   },
@@ -112,9 +131,19 @@ const routes = [
         component: () => import('@/views/Reader/LichSuMuonPage.vue')
       },
       {
+        path: 'borrow-detail/:id',
+        name: 'ReaderBorrowDetail',
+        component: () => import('@/views/Reader/BorrowDetailPage.vue')
+      },
+      {
         path: 'profile',
         name: 'ReaderProfile',
         component: () => import('@/views/Auth/ProfilePage.vue')
+      },
+      {
+        path: 'change-password',
+        name: 'ReaderChangePassword',
+        component: () => import('@/views/Auth/ChangePasswordPage.vue')
       }
     ]
   }
@@ -126,35 +155,51 @@ const router = createRouter({
 })
 
 // Navigation Guards
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore()
+  
+  // Đảm bảo checkAuth được gọi trước khi check routes
+  if (!authStore.isAuthenticated) {
+    const restored = await authStore.checkAuth()
+    console.log('Router: Auth check result:', restored, {
+      token: authStore.token,
+      user: authStore.user,
+      role: authStore.userRole
+    })
+  }
 
   // Kiểm tra route yêu cầu đăng nhập
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
+    console.log('Router: Redirecting to login - not authenticated')
     return next('/login')
   }
 
   // Kiểm tra route cho khách (đã đăng nhập không được vào)
   if (to.meta.guest && authStore.isAuthenticated) {
     if (authStore.isNhanVien) {
+      console.log('Router: Redirecting NhanVien to admin dashboard')
       return next('/admin/dashboard')
     } else {
+      console.log('Router: Redirecting DocGia to reader books')
       return next('/reader/books')
     }
   }
 
   // Kiểm tra quyền nhân viên
   if (to.meta.requiresNhanVien && !authStore.isNhanVien) {
+    console.log('Router: Access denied - not NhanVien')
     return next('/401')
   }
 
   // Kiểm tra quyền độc giả
   if (to.meta.requiresDocGia && !authStore.isDocGia) {
+    console.log('Router: Access denied - not DocGia')
     return next('/401')
   }
 
   // Kiểm tra quyền Admin
   if (to.meta.requiresAdmin && !authStore.isAdmin) {
+    console.log('Router: Access denied - not Admin')
     return next('/401')
   }
 

@@ -127,10 +127,6 @@
             ></textarea>
           </div>
 
-          <div v-if="error" class="alert alert-danger">
-            {{ error }}
-          </div>
-
           <div class="d-flex justify-content-end gap-2">
             <button type="button" class="btn btn-secondary" @click="$emit('cancel')">
               <i class="bi bi-x-circle"></i>
@@ -186,24 +182,42 @@ const formData = ref({
 })
 
 const borrowDays = computed(() => {
-  if (!props.record) return 0
-  const start = new Date(props.record.NgayMuon)
-  const end = new Date(props.record.NgayHenTra)
-  return Math.ceil((end - start) / (1000 * 60 * 60 * 24))
+  if (!props.record || !props.record.NgayMuon || !props.record.NgayHenTra) return 0
+  try {
+    const start = new Date(props.record.NgayMuon)
+    const end = new Date(props.record.NgayHenTra)
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) return 0
+    return Math.ceil((end - start) / (1000 * 60 * 60 * 24))
+  } catch (e) {
+    console.error('Error calculating borrowDays:', e)
+    return 0
+  }
 })
 
 const isOverdue = computed(() => {
-  if (!props.record) return false
-  const today = new Date(formData.value.NgayTra)
-  const dueDate = new Date(props.record.NgayHenTra)
-  return today > dueDate
+  if (!props.record || !props.record.NgayHenTra) return false
+  try {
+    const today = new Date(formData.value.NgayTra)
+    const dueDate = new Date(props.record.NgayHenTra)
+    if (isNaN(today.getTime()) || isNaN(dueDate.getTime())) return false
+    return today > dueDate
+  } catch (e) {
+    console.error('Error calculating isOverdue:', e)
+    return false
+  }
 })
 
 const daysOverdue = computed(() => {
-  if (!isOverdue.value) return 0
-  const today = new Date(formData.value.NgayTra)
-  const dueDate = new Date(props.record.NgayHenTra)
-  return Math.ceil((today - dueDate) / (1000 * 60 * 60 * 24))
+  if (!isOverdue.value || !props.record) return 0
+  try {
+    const today = new Date(formData.value.NgayTra)
+    const dueDate = new Date(props.record.NgayHenTra)
+    if (isNaN(today.getTime()) || isNaN(dueDate.getTime())) return 0
+    return Math.ceil((today - dueDate) / (1000 * 60 * 60 * 24))
+  } catch (e) {
+    console.error('Error calculating daysOverdue:', e)
+    return 0
+  }
 })
 
 const fineAmount = computed(() => {
@@ -220,9 +234,15 @@ watch([isOverdue, daysOverdue], () => {
 })
 
 const handleSubmit = () => {
+  const recordId = props.record?._id
+  if (!recordId) {
+    console.error('No recordId found in props.record:', props.record)
+    return
+  }
+  
   emit('submit', {
     ...formData.value,
-    recordId: props.record._id
+    recordId: recordId
   })
 }
 

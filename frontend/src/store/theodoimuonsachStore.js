@@ -24,15 +24,37 @@ export const useTheoDoiMuonSachStore = defineStore('theodoimuonsach', () => {
     error.value = null
     try {
       const response = await theodoimuonsachService.getAll(params)
-      muonsachs.value = response.data.muonsachs || response.data
       
+      // Handle different response structures
+      if (response.data.data) {
+        muonsachs.value = response.data.data
+      } else if (response.data.muonsachs) {
+        muonsachs.value = response.data.muonsachs
+      } else if (Array.isArray(response.data)) {
+        muonsachs.value = response.data
+      } else {
+        muonsachs.value = []
+      }
+      
+      // Update pagination
       if (response.data.pagination) {
         pagination.value = response.data.pagination
+      } else {
+        pagination.value = {
+          page: response.data.currentPage || 1,
+          limit: 10,
+          total: response.data.total || muonsachs.value.length,
+          totalPages: response.data.totalPages || 1
+        }
       }
 
-      return response.data
+      return {
+        muonsachs: muonsachs.value,
+        pagination: pagination.value
+      }
     } catch (err) {
       error.value = err.response?.data?.message || 'Không thể tải danh sách mượn sách'
+      muonsachs.value = []
       throw err
     } finally {
       loading.value = false
@@ -44,8 +66,9 @@ export const useTheoDoiMuonSachStore = defineStore('theodoimuonsach', () => {
     error.value = null
     try {
       const response = await theodoimuonsachService.getById(id)
-      currentMuonSach.value = response.data
-      return response.data
+      const data = response.data.data || response.data
+      currentMuonSach.value = data
+      return data
     } catch (err) {
       error.value = err.response?.data?.message || 'Không thể tải thông tin mượn sách'
       throw err
@@ -130,6 +153,26 @@ export const useTheoDoiMuonSachStore = defineStore('theodoimuonsach', () => {
     }
   }
 
+  async function rejectMuonSach(id, data) {
+    loading.value = true
+    error.value = null
+    try {
+      const response = await theodoimuonsachService.reject(id, data)
+      const index = muonsachs.value.findIndex(ms => ms._id === id)
+      if (index !== -1) {
+        muonsachs.value[index] = response.data
+      }
+      // Remove from pending requests
+      pendingRequests.value = pendingRequests.value.filter(ms => ms._id !== id)
+      return response.data
+    } catch (err) {
+      error.value = err.response?.data?.message || 'Không thể từ chối yêu cầu mượn sách'
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
   async function returnBook(id, data) {
     loading.value = true
     error.value = null
@@ -153,10 +196,18 @@ export const useTheoDoiMuonSachStore = defineStore('theodoimuonsach', () => {
     error.value = null
     try {
       const response = await theodoimuonsachService.getMyHistory(params)
-      myBorrows.value = response.data.muonsachs || response.data
+      // Backend returns: { success, count, total, totalPages, currentPage, data: [...] }
+      myBorrows.value = response.data.data || response.data || []
       
       if (response.data.pagination) {
         pagination.value = response.data.pagination
+      } else if (response.data.totalPages) {
+        pagination.value = {
+          page: response.data.currentPage || 1,
+          limit: 10,
+          total: response.data.total || 0,
+          totalPages: response.data.totalPages || 0
+        }
       }
 
       return response.data

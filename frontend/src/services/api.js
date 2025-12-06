@@ -1,4 +1,5 @@
 import axios from 'axios'
+import Cookies from 'js-cookie'
 import router from '@/router'
 
 const api = axios.create({
@@ -9,10 +10,10 @@ const api = axios.create({
   }
 })
 
-// Request interceptor - Thêm token vào header
+// Request interceptor - Thêm token từ cookie vào header
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token')
+    const token = Cookies.get('token')
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
@@ -32,8 +33,9 @@ api.interceptors.response.use(
     if (error.response) {
       // Xử lý lỗi 401 - Token hết hạn hoặc không hợp lệ
       if (error.response.status === 401) {
-        localStorage.removeItem('token')
-        localStorage.removeItem('user')
+        Cookies.remove('token')
+        Cookies.remove('user')
+        Cookies.remove('userRole')
         router.push('/login')
       }
       

@@ -56,19 +56,57 @@ const currentYear = computed(() => new Date().getFullYear())
 
 <style scoped>
 .footer {
-  box-shadow: 0 -2px 4px rgba(0,0,0,0.1);
+  background: linear-gradient(180deg, #f8f9fa 0%, #e9ecef 100%);
+  border-top: 1px solid #dee2e6;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05);
+  margin-top: 0 !important;
+  padding: 30px 0 !important;
 }
 
 .footer h5 {
   color: #0d6efd;
   margin-bottom: 15px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.footer h5 i {
+  margin-right: 8px;
+}
+
+.footer p {
+  margin-bottom: 10px;
+  color: #6c757d;
 }
 
 .footer ul li {
   margin-bottom: 8px;
+  list-style: none;
+}
+
+.footer ul li a {
+  color: #6c757d;
+  transition: all 0.2s ease;
+}
+
+.footer ul li a:hover {
+  color: #0d6efd;
+  text-decoration: underline;
 }
 
 .footer i {
   margin-right: 8px;
+  color: #0d6efd;
+  min-width: 18px;
+}
+
+.footer hr {
+  border-color: #dee2e6;
+  margin: 20px 0;
+}
+
+.footer .text-center {
+  font-size: 0.9rem;
+  color: #6c757d !important;
 }
 </style>

@@ -130,6 +130,17 @@ exports.updateNhaXuatBan = async (req, res) => {
 // @access  Private (Staff)
 exports.deleteNhaXuatBan = async (req, res) => {
   try {
+    // Kiểm tra xem có sách nào dùng nhà xuất bản này không
+    const Sach = require('../models/Sach');
+    const sachCount = await Sach.countDocuments({ MaNXB: req.params.id });
+    
+    if (sachCount > 0) {
+      return res.status(400).json({
+        success: false,
+        message: `Không thể xóa nhà xuất bản này vì có ${sachCount} cuốn sách liên quan. Vui lòng xóa hoặc chuyển các sách này trước.`
+      });
+    }
+
     const nxb = await NhaXuatBan.findByIdAndDelete(req.params.id);
 
     if (!nxb) {

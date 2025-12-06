@@ -11,9 +11,13 @@ const theoDoiMuonSachSchema = new mongoose.Schema({
     ref: 'Sach',
     required: [true, 'Mã sách là bắt buộc']
   },
+  MaNhanVien: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'NhanVien'
+  },
   NgayMuon: {
     type: Date,
-    required: [true, 'Ngày mượn là bắt buộc'],
+    required: true,
     default: Date.now
   },
   NgayTra: {
@@ -33,6 +37,11 @@ const theoDoiMuonSachSchema = new mongoose.Schema({
     type: String,
     enum: ['Chờ duyệt', 'Đang mượn', 'Đã trả', 'Quá hạn', 'Từ chối'],
     default: 'Chờ duyệt'
+  },
+  TinhTrangSach: {
+    type: String,
+    enum: ['good', 'normal', 'damaged', 'lost'],
+    default: 'good'
   },
   TienPhat: {
     type: Number,

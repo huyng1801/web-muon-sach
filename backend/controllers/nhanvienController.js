@@ -47,7 +47,10 @@ exports.register = async (req, res) => {
         HoTenNV: nhanVien.HoTenNV,
         Chucvu: nhanVien.Chucvu,
         DiaChi: nhanVien.DiaChi,
-        SoDienThoai: nhanVien.SoDienThoai
+        SoDienThoai: nhanVien.SoDienThoai,
+        NgayThamGia: nhanVien.NgayThamGia,
+        createdAt: nhanVien.createdAt,
+        updatedAt: nhanVien.updatedAt
       }
     });
   } catch (error) {
@@ -101,9 +104,12 @@ exports.login = async (req, res) => {
       data: {
         _id: nhanVien._id,
         HoTenNV: nhanVien.HoTenNV,
-        ChucVu: nhanVien.Chucvu, // Chuyển đổi từ Chucvu sang ChucVu
+        Chucvu: nhanVien.Chucvu,
         DiaChi: nhanVien.DiaChi,
         SoDienThoai: nhanVien.SoDienThoai,
+        NgayThamGia: nhanVien.NgayThamGia,
+        createdAt: nhanVien.createdAt,
+        updatedAt: nhanVien.updatedAt,
         userType: 'NhanVien'
       }
     });
@@ -192,12 +198,13 @@ exports.getNhanVienById = async (req, res) => {
 // @access  Private (Admin)
 exports.updateNhanVien = async (req, res) => {
   try {
-    const { HoTenNV, DiaChi, SoDienThoai, Password } = req.body;
+    const { HoTenNV, DiaChi, SoDienThoai, Password, Chucvu } = req.body;
 
     const updates = {};
     if (HoTenNV) updates.HoTenNV = HoTenNV;
     if (DiaChi) updates.DiaChi = DiaChi;
     if (SoDienThoai) updates.SoDienThoai = SoDienThoai;
+    if (Chucvu) updates.Chucvu = Chucvu;
 
     // Kiểm tra số điện thoại trùng (nếu có thay đổi)
     if (SoDienThoai) {
@@ -213,8 +220,8 @@ exports.updateNhanVien = async (req, res) => {
       }
     }
 
-    // Nếu có thay đổi mật khẩu
-    if (Password) {
+    // Nếu có thay đổi mật khẩu (không rỗng)
+    if (Password && Password.trim()) {
       if (Password.length < 6) {
         return res.status(400).json({
           success: false,
@@ -314,6 +321,152 @@ exports.deleteNhanVien = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Lỗi xóa nhân viên',
+      error: error.message
+    });
+  }
+};
+
+// @desc    Đăng xuất nhân viên
+// @route   POST /api/nhanvien/logout
+// @access  Private (Staff)
+exports.logout = async (req, res) => {
+  try {
+    res.status(200).json({
+      success: true,
+      message: 'Đăng xuất thành công'
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Lỗi đăng xuất',
+      error: error.message
+    });
+  }
+};
+
+// @desc    Lấy profile nhân viên hiện tại
+// @route   GET /api/nhanvien/profile
+// @access  Private (Staff)
+exports.getProfile = async (req, res) => {
+  try {
+    const nhanVien = await NhanVien.findById(req.user.id).select('-Password');
+    if (!nhanVien) {
+      return res.status(404).json({
+        success: false,
+        message: 'Không tìm thấy nhân viên'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: nhanVien
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Lỗi lấy thông tin profile',
+      error: error.message
+    });
+  }
+};
+
+// @desc    Cập nhật profile nhân viên hiện tại
+// @route   PUT /api/nhanvien/profile
+// @access  Private (Staff)
+exports.updateProfile = async (req, res) => {
+  try {
+    const { HoTenNV, SoDienThoai, DiaChi } = req.body;
+
+    const updates = {};
+    if (HoTenNV) updates.HoTenNV = HoTenNV;
+    if (SoDienThoai) updates.SoDienThoai = SoDienThoai;
+    if (DiaChi) updates.DiaChi = DiaChi;
+
+    // Kiểm tra số điện thoại trùng (nếu có thay đổi)
+    if (SoDienThoai) {
+      const existingPhone = await NhanVien.findOne({
+        SoDienThoai,
+        _id: { $ne: req.user.id }
+      });
+      if (existingPhone) {
+        return res.status(400).json({
+          success: false,
+          message: 'Số điện thoại đã được sử dụng'
+        });
+      }
+    }
+
+    const nhanVien = await NhanVien.findByIdAndUpdate(
+      req.user.id,
+      updates,
+      { new: true, runValidators: true }
+    ).select('-Password');
+
+    res.status(200).json({
+      success: true,
+      message: 'Cập nhật profile thành công',
+      data: nhanVien
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Lỗi cập nhật profile',
+      error: error.message
+    });
+  }
+};
+
+// @desc    Đổi mật khẩu nhân viên
+// @route   PUT /api/nhanvien/change-password
+// @access  Private (Staff)
+exports.changePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword, confirmPassword } = req.body;
+
+    // Validation
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      return res.status(400).json({
+        success: false,
+        message: 'Vui lòng cung cấp tất cả các trường bắt buộc'
+      });
+    }
+
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json({
+        success: false,
+        message: 'Mật khẩu xác nhận không khớp'
+      });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: 'Mật khẩu mới phải có ít nhất 6 ký tự'
+      });
+    }
+
+    const nhanVien = await NhanVien.findById(req.user.id);
+    const isMatch = await bcrypt.compare(currentPassword, nhanVien.Password);
+
+    if (!isMatch) {
+      return res.status(400).json({
+        success: false,
+        message: 'Mật khẩu hiện tại không đúng'
+      });
+    }
+
+    // Hash and update new password
+    nhanVien.Password = await bcrypt.hash(newPassword, 10);
+    await nhanVien.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Đổi mật khẩu thành công'
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Lỗi đổi mật khẩu',
       error: error.message
     });
   }
